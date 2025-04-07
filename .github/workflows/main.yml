@@ -55,6 +55,13 @@ jobs:
           fi
         working-directory: ./my-medusa-store/Terraform
 
+      - name: Import ECS service if already exists
+        run: |
+            if aws ecs describe-services --cluster medusa-cluster --services medusa-service | grep "ACTIVE" > /dev/null 2>&1; then
+              terraform import aws_ecs_service.medusa_service medusa-cluster/medusa-service || true
+            fi
+        working-directory: ./my-medusa-store/Terraform
+
       - name: Import RDS Subnet Group if already exists
         run: |
           if aws rds describe-db-subnet-groups --db-subnet-group-name medusa-db-subnet-group > /dev/null 2>&1; then
