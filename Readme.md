@@ -48,7 +48,7 @@ My-Medusa-Store/
 ### 1\. Clone This Repo
 
     
-    git clone https://github.com/yourusername/Medusa-Store.git
+    git clone https://github.com/trivediayush/Medusa-Store.git
     cd Medusa-Store
     
 
@@ -164,4 +164,4 @@ RDS or service DB password
 📫 Contact
 ----------
 
-Made with ❤️ by [Your Name](https://github.com/yourusername)
+Made with ❤️ by [Ayush Trivedi](https://github.com/trivediayush)
