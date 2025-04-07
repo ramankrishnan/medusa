@@ -11,23 +11,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the code
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Setup Node.js (if needed for build or Medusa commands)
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      # Setup Terraform
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.6.6
 
-      # AWS Auth using GitHub Secrets
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -35,17 +31,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-north-1
 
-      # Terraform Init
       - name: Terraform Init
         run: terraform init
         working-directory: ./my-medusa-store/Terraform
 
-      # Terraform Plan
       - name: Terraform Plan
-        run: terraform plan -input=false -out=tfplan
+        run: terraform plan -input=false -out=tfplan -var-file="terraform.tfvars"
         working-directory: ./my-medusa-store/Terraform
 
-      # Terraform Apply
       - name: Terraform Apply
         run: terraform apply -input=false -auto-approve tfplan
         working-directory: ./my-medusa-store/Terraform
