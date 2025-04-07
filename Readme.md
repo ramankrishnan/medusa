@@ -10,9 +10,11 @@ This project demonstrates how to deploy a [MedusaJS](https://medusajs.com) headl
 
 * * *
 
-📁 Project Structure
---------------------
+<hr>
 
+<h2>📁 Project Structure</h2>
+
+<pre>
 My-Medusa-Store/
 ├── my-medusa-store/                  # Medusa backend code
 │   ├── Dockerfile                    # Docker config for Medusa backend
@@ -26,8 +28,9 @@ My-Medusa-Store/
 └── .github/
     └── workflows/
         └── main.yml                 # GitHub Actions CI/CD pipeline
+</pre>
 
-* * *
+<hr>
 
 ⚙️ What It Provisions via Terraform
 -----------------------------------
