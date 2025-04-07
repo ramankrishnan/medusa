@@ -33,12 +33,12 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: ./terraform
+        working-directory: ./my-medusa-store/Terraform
 
       - name: Terraform Plan
         run: terraform plan -var-file="terraform.tfvars"
-        working-directory: ./terraform
+        working-directory: ./my-medusa-store/Terraform
 
       - name: Terraform Apply
         run: terraform apply -auto-approve -var-file="terraform.tfvars"
-        working-directory: ./terraform
+        working-directory: ./my-medusa-store/Terraform
