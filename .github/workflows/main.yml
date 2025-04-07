@@ -31,13 +31,35 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-north-1
 
-      # Optional: Uncomment if you want to destroy everything first
-      # - name: Terraform Destroy (Optional - use with caution!)
-      #   run: terraform destroy -auto-approve -var-file="terraform.tfvars"
-      #   working-directory: ./my-medusa-store/Terraform
+      - name: Clean Terraform State (Optional - for fresh deployments)
+        run: |
+          rm -f terraform.tfstate terraform.tfstate.backup
+          rm -rf .terraform
+        working-directory: ./my-medusa-store/Terraform
 
       - name: Terraform Init
-        run: terraform init -upgrade
+        run: terraform init
+        working-directory: ./my-medusa-store/Terraform
+
+      - name: Import ECR repo if already exists
+        run: |
+          if aws ecr describe-repositories --repository-names "medusa-backend" > /dev/null 2>&1; then
+            terraform import aws_ecr_repository.medusa_repo medusa-backend || true
+          fi
+        working-directory: ./my-medusa-store/Terraform
+
+      - name: Import IAM Role if already exists
+        run: |
+          if aws iam get-role --role-name ecsTaskExecutionRole > /dev/null 2>&1; then
+            terraform import aws_iam_role.ecs_task_execution_role ecsTaskExecutionRole || true
+          fi
+        working-directory: ./my-medusa-store/Terraform
+
+      - name: Import RDS Subnet Group if already exists
+        run: |
+          if aws rds describe-db-subnet-groups --db-subnet-group-name medusa-db-subnet-group > /dev/null 2>&1; then
+            terraform import aws_db_subnet_group.subnet_group medusa-db-subnet-group || true
+          fi
         working-directory: ./my-medusa-store/Terraform
 
       - name: Terraform Validate
