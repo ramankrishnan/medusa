@@ -4,7 +4,6 @@ resource "aws_ecs_cluster" "medusa_cluster" {
 
 resource "aws_ecs_task_definition" "medusa_task" {
   family                   = "medusa-task"
-  network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = "512"
   memory                   = "1024"
@@ -15,10 +14,12 @@ resource "aws_ecs_task_definition" "medusa_task" {
       name      = "medusa"
       image     = "${aws_ecr_repository.medusa_repo.repository_url}:${var.medusa_image_tag}"
       essential = true
-      portMappings = [{
-        containerPort = 9000
-        hostPort      = 9000
-      }]
+      portMappings = [
+        {
+          containerPort = 9000
+          hostPort      = 9000
+        }
+      ]
     }
   ])
 }
@@ -31,10 +32,18 @@ resource "aws_ecs_service" "medusa_service" {
   desired_count   = 1
 
   network_configuration {
-    subnets         = [aws_subnet.subnet1.id, aws_subnet.subnet2.id]
+    subnets         = module.vpc.private_subnets  # ✅ FIXED: use VPC module outputs
     assign_public_ip = true
     security_groups  = [aws_security_group.ecs_sg.id]
   }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.medusa_tg.arn
+    container_name   = "medusa"
+    container_port   = 9000
+  }
+
+  depends_on = [aws_lb_listener.medusa_listener]
 }
 
 resource "aws_security_group" "ecs_sg" {
