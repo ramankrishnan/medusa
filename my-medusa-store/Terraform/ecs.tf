@@ -8,7 +8,7 @@ resource "aws_ecs_task_definition" "medusa_task" {
   cpu                      = "512"
   memory                   = "1024"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
-  network_mode             = "awsvpc" # ✅ REQUIRED for Fargate
+  network_mode             = "awsvpc"
 
   container_definitions = jsonencode([{
     name      = "medusa"
@@ -86,7 +86,6 @@ resource "aws_lb_target_group" "medusa_tg" {
   }
 
   target_type = "ip"
-  # ✅ Removed depends_on to avoid cycle
 }
 
 resource "aws_lb_listener" "medusa_listener" {
@@ -98,8 +97,6 @@ resource "aws_lb_listener" "medusa_listener" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.medusa_tg.arn
   }
-
-  # ✅ Removed depends_on to avoid cycle
 }
 
 resource "aws_ecs_service" "medusa_service" {
@@ -121,5 +118,5 @@ resource "aws_ecs_service" "medusa_service" {
     container_port   = 9000
   }
 
-  depends_on = [aws_lb_listener.medusa_listener] # ✅ only this is needed
+  depends_on = [aws_lb_listener.medusa_listener]
 }
