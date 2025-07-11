@@ -24,8 +24,19 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-2
 
+      - name: Import IAM Role if already exists
+        run: |
+          if aws iam get-role --role-name ecsTaskExecutionRole > /dev/null 2>&1; then
+            terraform import aws_iam_role.ecs_task_execution_role ecsTaskExecutionRole || true
+          fi
+        working-directory: ./my-medusa-store/Terraform
+
+
       - name: Terraform Init & Apply
         run: |
           cd my-medusa-store/Terraform
           terraform init
           terraform apply -auto-approve -var-file="terraform.tfvars"
+
+            
+
