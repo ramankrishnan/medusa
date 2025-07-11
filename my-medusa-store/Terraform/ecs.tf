@@ -86,9 +86,7 @@ resource "aws_lb_target_group" "medusa_tg" {
   }
 
   target_type = "ip"
-
-  # ✅ Add depends_on to make sure listener is destroyed first
-  depends_on = [aws_lb_listener.medusa_listener]
+  # ✅ Removed depends_on to avoid cycle
 }
 
 resource "aws_lb_listener" "medusa_listener" {
@@ -101,8 +99,7 @@ resource "aws_lb_listener" "medusa_listener" {
     target_group_arn = aws_lb_target_group.medusa_tg.arn
   }
 
-  # ✅ Add depends_on to ensure ECS service is destroyed first
-  depends_on = [aws_ecs_service.medusa_service]
+  # ✅ Removed depends_on to avoid cycle
 }
 
 resource "aws_ecs_service" "medusa_service" {
@@ -124,9 +121,5 @@ resource "aws_ecs_service" "medusa_service" {
     container_port   = 9000
   }
 
-  # ✅ Ensures that this service is created only after the ALB and target group exist
-  depends_on = [
-    aws_lb.medusa_alb,
-    aws_lb_target_group.medusa_tg
-  ]
+  depends_on = [aws_lb_listener.medusa_listener] # ✅ only this is needed
 }
