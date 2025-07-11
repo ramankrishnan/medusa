@@ -38,7 +38,9 @@ resource "aws_ecs_service" "medusa_service" {
 }
 
 resource "aws_security_group" "ecs_sg" {
-  vpc_id = aws_vpc.main.id
+  name        = "ecs-sg"
+  description = "Allow HTTP"
+  vpc_id      = module.vpc.vpc_id  # use VPC from module
 
   ingress {
     from_port   = 9000

@@ -1,12 +1,14 @@
-data "aws_vpc" "default" {
-  default = true
-}
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "3.18.1"
 
-data "aws_subnet_ids" "default" {
-  vpc_id = data.aws_vpc.default.id
-}
+  name = "medusa-vpc"
+  cidr = "10.0.0.0/16"
 
-data "aws_subnet" "subnets" {
-  for_each = toset(data.aws_subnet_ids.default.ids)
-  id       = each.value
+  azs             = ["us-east-1a", "us-east-1b"]
+  public_subnets  = ["10.0.1.0/24", "10.0.2.0/24"]
+  private_subnets = ["10.0.3.0/24", "10.0.4.0/24"]
+
+  enable_nat_gateway = true
+  single_nat_gateway = true
 }
