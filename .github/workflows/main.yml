@@ -68,5 +68,5 @@ jobs:
         working-directory: ./my-medusa-store/Terraform
 
       - name: Terraform Apply
-        run: terraform apply -input=false -auto-approve tfplan
+        run: terraform destroy -input=false -auto-approve tfplan
         working-directory: ./my-medusa-store/Terraform
