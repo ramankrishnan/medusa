@@ -35,44 +35,29 @@ jobs:
         run: terraform init
         working-directory: ./my-medusa-store/Terraform
 
-      - name: Import ECR Repository
+      - name: Import ECR repo if exists
         run: |
-          terraform import aws_ecr_repository.medusa_repo medusa-backend || true
+          if aws ecr describe-repositories --repository-names "medusa-backend" > /dev/null 2>&1; then
+            terraform import aws_ecr_repository.medusa_repo medusa-backend || true
+          fi
         working-directory: ./my-medusa-store/Terraform
 
-      - name: Import IAM Role
+      - name: Import IAM Role if exists
         run: |
-          terraform import aws_iam_role.ecs_task_execution_role ecsTaskExecutionRole || true
+          if aws iam get-role --role-name ecsTaskExecutionRole > /dev/null 2>&1; then
+            terraform import aws_iam_role.ecs_task_execution_role ecsTaskExecutionRole || true
+          fi
         working-directory: ./my-medusa-store/Terraform
 
-      - name: Import ECS Service
+      - name: Import RDS DB Subnet Group if exists
         run: |
-          terraform import aws_ecs_service.medusa_service medusa-cluster/medusa-service || true
+          if aws rds describe-db-subnet-groups --db-subnet-group-name medusa-db-subnet-group > /dev/null 2>&1; then
+            terraform import aws_db_subnet_group.subnet_group medusa-db-subnet-group || true
+          fi
         working-directory: ./my-medusa-store/Terraform
 
-      - name: Import RDS Subnet Group
-        run: |
-          terraform import aws_db_subnet_group.subnet_group medusa-db-subnet-group || true
-        working-directory: ./my-medusa-store/Terraform
-
-      - name: Import Load Balancer
-        run: |
-          lb_arn=$(aws elbv2 describe-load-balancers --names "medusa-alb" --query "LoadBalancers[0].LoadBalancerArn" --output text)
-          terraform import aws_lb.medusa_alb $lb_arn || true
-        working-directory: ./my-medusa-store/Terraform
-
-      - name: Import Target Group
-        run: |
-          tg_arn=$(aws elbv2 describe-target-groups --names "medusa-tg" --query "TargetGroups[0].TargetGroupArn" --output text)
-          terraform import aws_lb_target_group.medusa_tg $tg_arn || true
-        working-directory: ./my-medusa-store/Terraform
-
-      - name: Import ALB Listener
-        run: |
-          lb_arn=$(aws elbv2 describe-load-balancers --names "medusa-alb" --query "LoadBalancers[0].LoadBalancerArn" --output text)
-          listener_arn=$(aws elbv2 describe-listeners --load-balancer-arn $lb_arn --query "Listeners[0].ListenerArn" --output text)
-          terraform import aws_lb_listener.medusa_listener $listener_arn || true
-        working-directory: ./my-medusa-store/Terraform
+      # Optional: Skip ECS service and ALB import for first run if they don’t exist
+      # They will be created during terraform apply
 
       - name: Terraform Validate
         run: terraform validate
