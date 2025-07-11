@@ -2,71 +2,30 @@ name: Deploy Medusa Backend
 
 on:
   push:
-    branches:
-      - master
+    branches: [ master ]
 
 jobs:
   deploy:
-    name: Deploy to AWS
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
-      - name: Set up Terraform
+      - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.6.6
 
-      - name: Configure AWS Credentials
+      - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: us-east-2
 
-      - name: Terraform Init
-        run: terraform init
-        working-directory: ./my-medusa-store/Terraform
-
-      - name: Import ECR repo if exists
+      - name: Terraform Init & Apply
         run: |
-          if aws ecr describe-repositories --repository-names "medusa-backend" > /dev/null 2>&1; then
-            terraform import aws_ecr_repository.medusa_repo medusa-backend || true
-          fi
-        working-directory: ./my-medusa-store/Terraform
-
-      - name: Import IAM Role if exists
-        run: |
-          if aws iam get-role --role-name ecsTaskExecutionRole > /dev/null 2>&1; then
-            terraform import aws_iam_role.ecs_task_execution_role ecsTaskExecutionRole || true
-          fi
-        working-directory: ./my-medusa-store/Terraform
-
-      - name: Import RDS DB Subnet Group if exists
-        run: |
-          if aws rds describe-db-subnet-groups --db-subnet-group-name medusa-db-subnet-group > /dev/null 2>&1; then
-            terraform import aws_db_subnet_group.subnet_group medusa-db-subnet-group || true
-          fi
-        working-directory: ./my-medusa-store/Terraform
-
-      # Optional: Skip ECS service and ALB import for first run if they don’t exist
-      # They will be created during terraform apply
-
-      - name: Terraform Validate
-        run: terraform validate
-        working-directory: ./my-medusa-store/Terraform
-
-      - name: Terraform Plan
-        run: terraform plan -input=false -out=tfplan -var-file="terraform.tfvars"
-        working-directory: ./my-medusa-store/Terraform
-
-      - name: Terraform Apply
-        run: terraform destroy -input=false -auto-approve tfplan
-        working-directory: ./my-medusa-store/Terraform
+          cd my-medusa-store/Terraform
+          terraform init
+          terraform apply -auto-approve -var-file="terraform.tfvars"
