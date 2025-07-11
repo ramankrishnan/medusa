@@ -4,6 +4,7 @@ resource "aws_ecs_cluster" "medusa_cluster" {
 
 resource "aws_ecs_task_definition" "medusa_task" {
   family                   = "medusa-task"
+  network_mode             = "awsvpc"                      # ✅ Required for FARGATE
   requires_compatibilities = ["FARGATE"]
   cpu                      = "512"
   memory                   = "1024"
@@ -32,7 +33,7 @@ resource "aws_ecs_service" "medusa_service" {
   desired_count   = 1
 
   network_configuration {
-    subnets         = module.vpc.private_subnets  # ✅ FIXED: use VPC module outputs
+    subnets          = module.vpc.private_subnets         # ✅ Use VPC module
     assign_public_ip = true
     security_groups  = [aws_security_group.ecs_sg.id]
   }
@@ -46,10 +47,11 @@ resource "aws_ecs_service" "medusa_service" {
   depends_on = [aws_lb_listener.medusa_listener]
 }
 
+# ECS Task Security Group
 resource "aws_security_group" "ecs_sg" {
   name        = "ecs-sg"
-  description = "Allow HTTP"
-  vpc_id      = module.vpc.vpc_id  # use VPC from module
+  description = "Allow HTTP for ECS task"
+  vpc_id      = module.vpc.vpc_id
 
   ingress {
     from_port   = 9000
@@ -65,7 +67,8 @@ resource "aws_security_group" "ecs_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-# Create ALB Security Group
+
+# ALB Security Group
 resource "aws_security_group" "alb_sg" {
   name        = "alb-sg"
   description = "Allow HTTP from the internet"
@@ -86,7 +89,7 @@ resource "aws_security_group" "alb_sg" {
   }
 }
 
-# Create ALB
+# ALB
 resource "aws_lb" "medusa_alb" {
   name               = "medusa-alb"
   load_balancer_type = "application"
@@ -95,7 +98,7 @@ resource "aws_lb" "medusa_alb" {
   subnets            = module.vpc.public_subnets
 }
 
-# Create Target Group for ECS Service
+# Target Group
 resource "aws_lb_target_group" "medusa_tg" {
   name     = "medusa-tg"
   port     = 9000
@@ -115,7 +118,7 @@ resource "aws_lb_target_group" "medusa_tg" {
   target_type = "ip"
 }
 
-# Create Listener for ALB to forward traffic to target group
+# Listener
 resource "aws_lb_listener" "medusa_listener" {
   load_balancer_arn = aws_lb.medusa_alb.arn
   port              = 80
